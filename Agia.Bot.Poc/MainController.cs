@@ -57,7 +57,7 @@ public class MainController
                             IsMultiline = true,
                             Height = ElementHeight.Stretch,
                             Value = context.UserGraphToken?.Token.RawData
-                        }
+                        },
                         new TextBlock("Only in development mode. Inspect with [jwt.ms](https://jwt.ms)")
                         {
                             Weight = TextWeight.Bolder,
