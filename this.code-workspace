@@ -1,0 +1,63 @@
+{
+	"folders": [
+		{
+			"name": "Teams App",
+			"path": "./TeamsApp"
+		},
+		{
+			"name": "Bot Application",
+			"path": "./Agia.Bot.Poc"
+		},
+		{
+			"name": "(all)",
+			"path": "."
+		}
+	],
+	"settings": {
+		"dotnet.defaultSolution": "../Agia.Bot.Poc.sln"
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"type": "dotnet",
+				"task": "clean",
+				"group": "build",
+				"problemMatcher": [],
+				"label": "dotnet: clean"
+			},
+			{
+				"type": "dotnet",
+				"task": "build",
+				"dependsOn": [
+					"dotnet: clean"
+				],
+				"group": "build",
+				"problemMatcher": [],
+				"label": "dotnet: build"
+			}
+		]
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Bot Application",
+				"type": "coreclr",
+				"request": "launch",
+				"preLaunchTask": "dotnet: build",
+				"program": "${workspaceFolder:Bot Application}/bin/Debug/net9.0/Agia.Bot.Poc.dll",
+				"args": [],
+				"cwd": "${workspaceFolder:Bot Application}",
+				"stopAtEntry": false,
+				"serverReadyAction": {
+					"pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+					"uriFormat": "%s/swagger"
+				},
+				"env": {
+					"ASPNETCORE_ENVIRONMENT": "Development"
+				}
+			}
+		]
+	}
+}

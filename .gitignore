@@ -631,3 +631,5 @@ build/
 **/*.x
 **/*.user
 **/deploy.zip
+
+!*.code-workspace
