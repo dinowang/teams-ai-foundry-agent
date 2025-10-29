@@ -76,7 +76,7 @@ public class MainController
             var projectEndpointUri = new Uri(_config.FOUNDRY_PROJECT_ENDPOINT!);
             TokenCredential credential = _config.FOUNDRY_AUTH_MODE!.ToUpper() switch
             {
-                "JWT" => new StaticKeyCredential(context.UserGraphToken?.Token.RawData!),
+                "JWT" => new AccessTokenCredential(context.UserGraphToken!),
                 "SP" => new ClientSecretCredential(_config.TENANT_ID, _config.FOUNDRY_CLIENT_ID, _config.FOUNDRY_CLIENT_SECRET),
                 _ => new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = _config.MicrosoftTenantId }),
             };
