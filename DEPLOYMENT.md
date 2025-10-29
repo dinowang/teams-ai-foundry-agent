@@ -1,9 +1,6 @@
 # DEPLOYMENT
 
-user2@MngEnvMCAP247195.onmicrosoft.com
-
-
-## 需求條件
+## 前置需求
 
 - Tools
   - Visual Studio Code
@@ -14,7 +11,7 @@ user2@MngEnvMCAP247195.onmicrosoft.com
   - Azure CLI (Bicep should be included)
 
 - Settings
-  - Microsoft Teams Admin Center  
+  - Microsoft Teams Admin Center ( https://admin.teams.microsoft.com/ )
     Enable Upload Custom Apps  
     https://learn.microsoft.com/en-us/microsoftteams/manage-apps#manage-org-wide-app-settings
 
@@ -24,7 +21,7 @@ user2@MngEnvMCAP247195.onmicrosoft.com
   - Azure Bot Service
     - User Assigned Managed Identity #1 for Bot itself
     - User Assigned Managed Identity #2 for SSO
-  - Application Insights (optional)
+  - Application Insights 
 
 ## 部署步驟
 
@@ -34,7 +31,7 @@ user2@MngEnvMCAP247195.onmicrosoft.com
    vscode this.code-workspace
    ```
 
-2. 編輯 Teams App 下的 `env/.env.dev` 設定專案屬性，以下為起始範例
+2. 創建 Teams App 下的 `env/.env.dev` 設定專案屬性，以下為範例
    ```bash
    TEAMSFX_ENV=dev
    APP_NAME_SUFFIX=dev
@@ -43,13 +40,77 @@ user2@MngEnvMCAP247195.onmicrosoft.com
    RESOURCE_SUFFIX=-d0928
    ```
 
-3. VSCode provision
-   - Teams app manifest
-   - Azure resources
-   - Teams app manifest update
-   - Teams app manifest update (manual update)
+3. Provision Teams app using Microsoft 365 Agents Toolkit
+   - Sign in Microsoft 365
+   - Sign in Azure 
+   - Provision
+     - Teams app manifest
+     - Azure resources
+     - Teams app manifest update
+     - Teams app manifest update ( manual update in M365 Developer Portal https://dev.teams.microsoft.com/ )  
+       ```json
+       {
+         ...
+         "bots": [
+           {
+             "botId": "{bot id}",
+             ...
+           }
+         ],
+         "validDomains": [
+           "{app service name}.azurewebsites.net",
+           "*.devtunnels.ms",
+           "*.botframework.com"
+         ],
+         "webApplicationInfo": {
+           "id": "{bot id}",
+           "resource": "api://botid-{bot id}"
+         }
+       }       
+       ```
 
-4. Bot Service 設定
+4. Service Principal
+   創建或使用現有的 Service Principal (SP)，SP 應該被授予 AI Foundry 的 AI User 角色
+   設定
+   - Authentication
+     Redirect URIs:
+     - https://token.botframework.com/.auth/web/redirect
+     - https://{your-app-service-name}.azurewebsites.net/auth-end.html
+
+   - API Permissions
+     1. Azure Machine Learning Services
+        - user_impersonation
+     2. Microsoft Cognitive Services
+        - user_impersonation
+     3. Microsoft Graph
+        - email
+        - offlice_access
+        - openid
+        - profile
+        - User.Read
+        - User.ReadBasic.All
+
+   - Expose an API
+     - Application ID URI: `api://botid-{Bot's Microsoft App ID}`
+     - Scopes defined by this API: 
+       - Scope name: `access_as_user`
+       - Who can consent?: `Admins and users` (by case)
+       - State: `Enabled`
+     - Authorized client applications
+       - 5e3ce6c0-2b1f-4285-8d4b-75ee78787346 (This is Teams web application)
+       - 1fec8e78-bce4-4aaf-ab1b-5451cc387264 (This is Teams mobile or desktop application)
+       > NOTE: https://learn.microsoft.com/en-us/microsoftteams/platform/bots/how-to/authentication/bot-sso-register-aad?tabs=botid 
+
+   - Manifest
+     ```json
+     {
+	     "id": "...",
+	     "accessTokenAcceptedVersion": 2,
+	     ...
+     }
+     ```
+
+5. Bot Service 設定
    - OAuth profile
      - Name: `graph`
      - Service Provider: `AAD v2 with Federated Credentials`
@@ -58,42 +119,27 @@ user2@MngEnvMCAP247195.onmicrosoft.com
      - Token Exchange URL: `api://botid-{Bot's Microsoft App ID}`
      - Tenant ID: `{tenant-id}`
      - Scopes: `openid profile offline_access https://ai.azure.com/.default`
-       NOTE: https://ai.azure.com/.default actually is Azure Machine Learning scope
+       > NOTE: https://ai.azure.com/.default actually is Azure Machine Learning scope
 
    - Service Principal 
-     - federated credential
+     - 設定
+     - Certificates & secrets / Federated Credentials 
        - Federated credential scenario: `Other issuer`
        - Issuer: `https://login.microsoftonline.com/{tenant-id}/v2.0`
        - Type: `Explicit subject identifier`
        - Value: `/eid1/c/pub/t/{encoded-tenant-id}/a/9ExAW52n_ky4ZiS_jhpJIQ/{Unique Subject Identifier}`  
          Reference: https://github.com/microsoft/Agents/issues/237
 
-     - API Permissions
-       1. Azure Machine Learning Services
-          - user_impersonation
-       2. Microsoft Cognitive Services
-          - user_impersonation
-       3. Microsoft Graph
-          - email
-          - offlice_access
-          - openid
-          - profile
-          - User.Read
-          - User.ReadBasic.All
    - Test connection
 
-5. App Service 設定 
+6. App Service 設定 
    - App Service Logs
+   - Application Insights
+   - Configurations
    - Environment Variables
 
-6. VSCode deploy
-
-
-7. Service Principal's Manifest
-   ```json
-   {
-	   "id": "...",
-	   "accessTokenAcceptedVersion": 2,
-	   ...
-   }
-   ```
+7. Deploy bot application  
+   Choose one of the following methods:
+   - Zip Deploy (CLI)
+   - Zip Deploy (Kudu)
+   - Deploy from VSCode using M365 Agents Toolkit

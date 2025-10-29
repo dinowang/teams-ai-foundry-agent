@@ -38,7 +38,8 @@ public class MainController
                 return;
             }
 
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development"
+                && !context.Storage.Exists("debug_show_jwt"))
             {
                 await client.Send(new AdaptiveCard()
                 {
@@ -66,6 +67,8 @@ public class MainController
                         }
                     }
                 });
+
+                context.Storage.Set("debug_show_jwt", true);
             }
 
             await client.Typing();
@@ -129,6 +132,8 @@ public class MainController
                             break;
                         }
                     }
+
+                    break;
                 }
             }
         }
