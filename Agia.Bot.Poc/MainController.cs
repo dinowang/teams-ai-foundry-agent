@@ -76,8 +76,11 @@ public class MainController
             var projectEndpointUri = new Uri(_config.FOUNDRY_PROJECT_ENDPOINT!);
             TokenCredential credential = _config.FOUNDRY_AUTH_MODE!.ToUpper() switch
             {
+                // Delegated Permission with JWT token from Teams
                 "JWT" => new AccessTokenCredential(context.UserGraphToken!),
+                // Application Permission with Client ID and Client Secret
                 "SP" => new ClientSecretCredential(_config.TENANT_ID, _config.FOUNDRY_CLIENT_ID, _config.FOUNDRY_CLIENT_SECRET),
+                // Development with DefaultAzureCredential
                 _ => new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = _config.MicrosoftTenantId }),
             };
             var projectClient = new AIProjectClient(projectEndpointUri, credential);
