@@ -51,12 +51,20 @@
        ```json
        {
          ...
-         "bots": [
-           {
-             "botId": "{bot id}",
-             ...
-           }
-         ],
+		 "bots": [
+	     {
+		      "botId": "{bot id}",
+		      "scopes": [
+		        "personal",
+		        "team",
+		        "groupChat"
+		      ],
+		      "isNotificationOnly": false,
+		      "supportsCalling": false,
+		      "supportsVideo": false,
+		      "supportsFiles": false
+		    }
+		  ],
          "validDomains": [
            "{app service name}.azurewebsites.net",
            "*.devtunnels.ms",
