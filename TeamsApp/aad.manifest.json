@@ -80,6 +80,24 @@
           "type": "Scope"
         }
       ]
+    },
+    {
+      "resourceAppId": "Azure Machine Learning Services",
+      "resourceAccess": [
+        {
+          "id": "user_impersonation",
+          "type": "Scope"
+        }
+      ]
+    },
+    {
+      "resourceAppId": "Microsoft Cognitive Services",
+      "resourceAccess": [
+        {
+          "id": "user_impersonation",
+          "type": "Scope"
+        }
+      ]
     }
   ],
   "web": {

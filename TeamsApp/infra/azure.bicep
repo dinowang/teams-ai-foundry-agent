@@ -49,11 +49,11 @@ resource webApp 'Microsoft.Web/sites@2021-02-01' = {
         }
         {
           name: 'ApplicationInsightsAgent_EXTENSION_VERSION'
-          value: '~2',
+          value: '~2'
         }
         {
-          name: 'XDT_MicrosoftApplicationInsights_Mode',
-          value: 'default',
+          name: 'XDT_MicrosoftApplicationInsights_Mode'
+          value: 'default'
         }
         {
           name: 'WEBSITE_RUN_FROM_PACKAGE'

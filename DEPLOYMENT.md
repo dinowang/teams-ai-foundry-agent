@@ -73,32 +73,39 @@
    創建或使用現有的 Service Principal (SP)，SP 應該被授予 AI Foundry 的 AI User 角色
    設定
    - Authentication
-     Redirect URIs:
-     - https://token.botframework.com/.auth/web/redirect
-     - https://{your-app-service-name}.azurewebsites.net/auth-end.html
+
+     Redirect URIs
+     | URI |
+     |---|
+     | + https://token.botframework.com/.auth/web/redirect |
+     | + https://{your-app-service-name}.azurewebsites.net/auth-end.html |
 
    - API Permissions
-     1. Azure Machine Learning Services
-        - user_impersonation
-     2. Microsoft Cognitive Services
-        - user_impersonation
-     3. Microsoft Graph
-        - email
-        - offlice_access
-        - openid
-        - profile
-        - User.Read
-        - User.ReadBasic.All
+     | API | Permissions |
+     |---|---|
+     | Azure Machine Learning Services | user_impersonation |
+     | Microsoft Cognitive Services | user_impersonation |
+     | Microsoft Graph | email, offlice_access, openid, profile, User.Read, User.ReadBasic.All |
 
    - Expose an API
-     - Application ID URI: `api://botid-{Bot's Microsoft App ID}`
+     | Field | Value |
+     |---|---|
+     | Application ID URI | `api://botid-{Bot's Microsoft App ID}` | 
+
      - Scopes defined by this API: 
-       - Scope name: `access_as_user`
-       - Who can consent?: `Admins and users` (by case)
-       - State: `Enabled`
+       | Field | Value |
+       |---|---|
+       | Scope name | `access_as_user` |
+       | Who can consent? | `Admins and users` (by case) |
+       | State | `Enabled` |
+
      - Authorized client applications
-       - 5e3ce6c0-2b1f-4285-8d4b-75ee78787346 (This is Teams web application)
-       - 1fec8e78-bce4-4aaf-ab1b-5451cc387264 (This is Teams mobile or desktop application)
+
+       | Application | Scope |
+       |---|---|
+       | `5e3ce6c0-2b1f-4285-8d4b-75ee78787346` (This is Teams web application) | `api://botid-{Bot's Microsoft App ID}` |
+       | `1fec8e78-bce4-4aaf-ab1b-5451cc387264` (This is Teams mobile or desktop application) | `api://botid-{Bot's Microsoft App ID}` |
+
        > NOTE: https://learn.microsoft.com/en-us/microsoftteams/platform/bots/how-to/authentication/bot-sso-register-aad?tabs=botid 
 
    - Manifest
@@ -112,25 +119,36 @@
 
 5. Bot Service 設定
    - OAuth profile
-     - Name: `graph`
-     - Service Provider: `AAD v2 with Federated Credentials`
-     - Client ID: `{Service Principal Client ID}`
-     - Unique Subject Identifier: `{guid}` (can be any random string)
-     - Token Exchange URL: `api://botid-{Bot's Microsoft App ID}`
-     - Tenant ID: `{tenant-id}`
-     - Scopes: `openid profile offline_access https://ai.azure.com/.default`
-       > NOTE: https://ai.azure.com/.default actually is Azure Machine Learning scope
+
+     | Field | Value|
+     |---|---|
+     | Name | `graph` |
+     | Service Provider | `AAD v2 with Federated Credentials` |
+     | Client ID | `{Service Principal Client ID}` |
+     | Unique Subject Identifier | `{guid}` (can be any random string) |
+     | Token Exchange URL | `api://botid-{Bot's Microsoft App ID}` |
+     | Tenant ID | `{tenant-id}` |
+     | Scopes | `openid profile offline_access https://ai.azure.com/.default` |
+     
+     > NOTE: https://ai.azure.com/.default is the Azure Machine Learning scope
+
 
    - Service Principal 
-     - 設定
      - Certificates & secrets / Federated Credentials 
-       - Federated credential scenario: `Other issuer`
-       - Issuer: `https://login.microsoftonline.com/{tenant-id}/v2.0`
-       - Type: `Explicit subject identifier`
-       - Value: `/eid1/c/pub/t/{encoded-tenant-id}/a/9ExAW52n_ky4ZiS_jhpJIQ/{Unique Subject Identifier}`  
-         Reference: https://github.com/microsoft/Agents/issues/237
+        
+       | Field | Value|
+       |---|---|
+       | Federated Credential scenario | `Other issuer` |
+       | Issuer | `https://login.microsoftonline.com/{tenant-id}/v2.0` |
+       | Type | `Explicit subject identifier` |
+       | Value | `/eid1/c/pub/t/{encoded-tenant-id}/a/9ExAW52n_ky4ZiS_jhpJIQ/{Unique Subject Identifier}` |
 
-   - Test connection
+       > https://learn.microsoft.com/en-us/microsoft-365/agents-sdk/azure-bot-user-authorization-federated-credentials
+       >
+       > Problem? check out: https://github.com/microsoft/Agents/issues/237
+
+   - OAuth profile
+     - Test connection
 
 6. App Service 設定 
    - App Service Logs

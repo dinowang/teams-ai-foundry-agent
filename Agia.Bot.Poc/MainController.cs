@@ -59,7 +59,7 @@ public class MainController
                             Height = ElementHeight.Stretch,
                             Value = context.UserGraphToken?.Token.RawData
                         },
-                        new TextBlock("Only in development mode. Inspect with [jwt.ms](https://jwt.ms)")
+                        new TextBlock("Only in development mode. Inspect with [jwt.ms](https://jwt.ms) ([Claims reference](https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference)).")
                         {
                             Weight = TextWeight.Bolder,
                             Size = TextSize.Medium,
