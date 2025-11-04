@@ -18,7 +18,10 @@ var logger = LoggerFactory.Create(logging =>
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenTelemetry().UseAzureMonitor();
+if (!string.IsNullOrEmpty(builder.Configuration.GetValue<string>("APPLICATIONINSIGHTS_CONNECTION_STRING")))
+{
+    builder.Services.AddOpenTelemetry().UseAzureMonitor();
+}
 ///builder.AddTeams();
 
 var appBuilder = App.Builder();
