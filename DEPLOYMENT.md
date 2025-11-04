@@ -8,10 +8,14 @@
     - Microsoft 365 Agents Toolkit 
     - Azure Resource 
     - Azure App Service
-  - Azure CLI (Bicep should be included)
+  - Azure CLI
+  - Bicep CLI
+    ```bash
+    az bicep install
+    ```
 
 - Settings
-  - Microsoft Teams Admin Center ( https://admin.teams.microsoft.com/ )
+  - Microsoft Teams Admin Center ( https://admin.teams.microsoft.com/ )  
     Enable Upload Custom Apps  
     https://learn.microsoft.com/en-us/microsoftteams/manage-apps#manage-org-wide-app-settings
 
@@ -19,15 +23,13 @@
   - App Service Plan + App Service (Windows, .NET 9)
     - Precompiled binary (provide later)
   - Azure Bot Service
-    - User Assigned Managed Identity #1 for Bot itself
-    - User Assigned Managed Identity #2 for SSO
-  - Application Insights 
+    - User Assigned Managed Identity 
+  - Application Insights  
 
 ## 部署步驟
 
 1. 使用 VSCode 打開this.code-workspace 檔 
    ```bash
-   cd $PROJECT_FOLDER
    vscode this.code-workspace
    ```
 
