@@ -108,5 +108,28 @@
   },
   "spa": {
     "redirectUris": []
+  },
+  "bots": [
+    {
+      "botId": "${{BOT_ID}}",
+      "scopes": [
+        "personal",
+        "team",
+        "groupChat"
+      ],
+      "isNotificationOnly": false,
+      "supportsCalling": false,
+      "supportsVideo": false,
+      "supportsFiles": false
+    }
+  ],
+  "validDomains": [
+    "${{BOT_DOMAIN}}",
+    "*.devtunnels.ms",
+    "*.botframework.com"
+  ],
+  "webApplicationInfo": {
+    "id": "${{BOT_ID}}",
+    "resource": "api://botid-${{BOT_ID}}"
   }
 }
