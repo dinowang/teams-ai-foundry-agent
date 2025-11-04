@@ -78,15 +78,18 @@
        ```
 
 4. Service Principal
-   創建或使用現有的 Service Principal (SP)，SP 應該被授予 AI Foundry 的 AI User 角色
-   設定
+   使用 .env.dev 中的 AAD_APP_CLIENT_ID 值在 Entra ID 找到 Service Principal (SP)
+   
+   此 SP 應該被授予 AI Foundry 的 AI User 角色
+
+   設定(檢查)
    - Authentication
 
      Redirect URIs
-     | URI                                                               |
-     | ----------------------------------------------------------------- |
-     | + https://token.botframework.com/.auth/web/redirect               |
-     | + https://{your-app-service-name}.azurewebsites.net/auth-end.html |
+     | URI                                                             |
+     | --------------------------------------------------------------- |
+     | https://token.botframework.com/.auth/web/redirect               |
+     | https://{your-app-service-name}.azurewebsites.net/auth-end.html |
 
    - API Permissions
      | API                             | Permissions                                                           |
@@ -126,7 +129,7 @@
      ```
 
 5. Bot Service 設定
-   - OAuth profile
+   - 於 Configuration 中，增加一組 OAuth profile
 
      | Field                     | Value                                                         |
      | ------------------------- | ------------------------------------------------------------- |
@@ -140,16 +143,17 @@
      
      > NOTE: https://ai.azure.com/.default is the Azure Machine Learning scope
 
+     完成後先存檔再重新打開 OAuth profile 編輯頁面
 
-   - Service Principal 
-     - Certificates & secrets / Federated Credentials 
+   - 打開先前設定的 Service Principal
+     - 在 Certificates & secrets 中，新增一組 Federated Credential
         
-       | Field                         | Value                                                                                    |
-       | ----------------------------- | ---------------------------------------------------------------------------------------- |
-       | Federated Credential scenario | `Other issuer`                                                                           |
-       | Issuer                        | `https://login.microsoftonline.com/{tenant-id}/v2.0`                                     |
-       | Type                          | `Explicit subject identifier`                                                            |
-       | Value                         | `/eid1/c/pub/t/{encoded-tenant-id}/a/9ExAW52n_ky4ZiS_jhpJIQ/{Unique Subject Identifier}` |
+       | Field                         | Value                                                                                        |
+       | ----------------------------- | -------------------------------------------------------------------------------------------- |
+       | Federated Credential scenario | `Other issuer`                                                                               |
+       | Issuer                        | `https://login.microsoftonline.com/{tenant-id}/v2.0`                                         |
+       | Type                          | `Explicit subject identifier`                                                                |
+       | Value                         | `/eid1/c/pub/t/{encoded-tenant-id}/a/{base64-encoded-client-id}/{Unique Subject Identifier}` |
 
        > https://learn.microsoft.com/en-us/microsoft-365/agents-sdk/azure-bot-user-authorization-federated-credentials
        >
@@ -160,8 +164,11 @@
 
 6. App Service 設定 
    - App Service Logs
+     - 打開 Application Logging (Filesystem)
    - Application Insights
+     - 新建 Application Insights 實例，綁定至 App Service
    - Configurations
+     - Stack: `.NET 9.0`
    - Environment Variables
 
 7. Deploy bot application  
