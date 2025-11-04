@@ -41,41 +41,33 @@
    ```
 
 3. Provision Teams app using Microsoft 365 Agents Toolkit
-   - Sign in Microsoft 365
-   - Sign in Azure 
-   - Provision
-     - Teams app manifest
-     - Azure resources
-     - Teams app manifest update
-     - Teams app manifest update ( manual update in M365 Developer Portal https://dev.teams.microsoft.com/ )  
-       ```json
-       {
-         ...
-        "bots": [
-          {
-              "botId": "{bot id}",
-              "scopes": [
-                "personal",
-                "team",
-                "groupChat"
-              ],
-              "isNotificationOnly": false,
-              "supportsCalling": false,
-              "supportsVideo": false,
-              "supportsFiles": false
-            }
-          ],
-         "validDomains": [
-           "{app service name}.azurewebsites.net",
-           "*.devtunnels.ms",
-           "*.botframework.com"
-         ],
-         "webApplicationInfo": {
-           "id": "{bot id}",
-           "resource": "api://botid-{bot id}"
-         }
-       }       
-       ```
+   - 打開 Microsoft 365 Agents Toolkit extension
+     - 登入 Microsoft 365
+     - 登入 Azure
+     - 在環境中選擇 dev
+     - 執行 Provision
+       - (自動化) 生成/更新 Teams app 與 manifest
+       - (自動化) 部署 Azure resources
+       - (自動化) 新增/更新 Service Principal
+       - (自動化) 更新 Teams app manifest 
+     - 完成 Provision 後
+       - 檢查在 Teams app 的 build 目錄中產生 app.manifest.dev.json 檔案
+       - 檢查在 Teams app 的 env 目錄的 .env.dev 是否附加了物件參數
+         ```bash
+         TEAMS_APP_TENANT_ID=...
+         TEAMS_APP_ID=...
+         BOT_ID=...
+         BOT_AZURE_APP_SERVICE_RESOURCE_ID=/subscriptions/.../resourceGroups/.../providers/Microsoft.Web/sites/...
+         BOT_DOMAIN=.......azurewebsites.net
+         BOT_TENANT_ID=...
+         AAD_APP_CLIENT_ID=...
+         AAD_APP_OBJECT_ID=...
+         AAD_APP_TENANT_ID=...
+         AAD_APP_OAUTH_AUTHORITY=https://login.microsoftonline.com/...
+         AAD_APP_OAUTH_AUTHORITY_HOST=https://login.microsoftonline.com
+         AAD_APP_ACCESS_AS_USER_PERMISSION_ID=...
+         AAD_APP_CLIENT_SECRET=...
+         ```
 
 4. Service Principal
    使用 .env.dev 中的 AAD_APP_CLIENT_ID 值在 Entra ID 找到 Service Principal (SP)
