@@ -1,5 +1,13 @@
 # DEPLOYMENT
 
+## 相關連結
+
+- [M365 Admin Portal](https://admin.microsoft.com)
+- [Entra ID Portal](https://entra.microsoft.com)
+- [Teams Admin Portal](https://admin.teams.microsoft.com)
+- [Teams Developer Portal](https://dev.teams.microsoft.com)
+- [Azure Portal](https://portal.azure.com)
+
 ## 前置需求
 
 - Tools
@@ -15,8 +23,7 @@
     ```
 
 - Settings
-  - Microsoft Teams Admin Center ( https://admin.teams.microsoft.com/ )  
-    Enable Upload Custom Apps  
+  - 在 Microsoft Teams Admin Center 中 Enable Upload Custom Apps  
     https://learn.microsoft.com/en-us/microsoftteams/manage-apps#manage-org-wide-app-settings
 
 - Azure 
@@ -70,8 +77,8 @@
          AAD_APP_ACCESS_AS_USER_PERMISSION_ID=...
          AAD_APP_CLIENT_SECRET=...
          ```
-       - 在 Teams Developer Portal ( https://dev.teams.microsoft.com ) 中，應該能找到上傳的 Teams app  
-         > 如果 Provision 順利結束，卻遲遲未出現在 Teams Developer Portal 中，請利用 Teams Developer Portal 中的 Apps 頁面，使用 Take Ownership 輸入 .env.dev 中的 TEAMS_APP_ID 值並尋找和取得該 App 的擁有權
+       - 在 Teams Developer Portal 中，應該能找到上傳的 Teams app  
+         > 如果 Provision 順利結束，卻遲遲未出現在 Teams Developer Portal 中，請利用 Apps 頁面中的 `Take Ownership` 輸入 `.env.dev` 中的 `TEAMS_APP_ID` 值並尋找和取得該 App 的擁有權
 
 4. Service Principal
    使用 .env.dev 中的 AAD_APP_CLIENT_ID 值在 Entra ID 找到 Service Principal (SP)
