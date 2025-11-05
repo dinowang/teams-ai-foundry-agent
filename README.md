@@ -15,5 +15,10 @@ This repository contains a proof of concept bot application that integrates with
 
 ## References
 
-- [Teams AI Library (v2)](https://microsoft.github.io/teams-ai/welcome/)
+- [Teams AI Library | Microsoft Learn](https://learn.microsoft.com/en-us/microsoftteams/platform/teams-ai-library/)
+  - [Teams AI Library (v2)](https://microsoft.github.io/teams-ai/welcome/)
+  - [microsoft/teams-sdk: SDK focused on building AI based applications and extensions for Microsoft Teams and other Bot Framework channels](https://github.com/microsoft/teams-sdk)
+    - [microsoft/teams.net: a suite of packages used to build on the Teams Platform.](https://github.com/microsoft/teams.net)
+    - [microsoft/teams.py: a suite of packages used to build on the Teams Platform.](https://github.com/microsoft/teams.py)
+    - [microsoft/teams.ts: a suite of packages used to build on the Teams Platform.](https://github.com/microsoft/teams.ts)
 - [Copilot Developer Camp](https://microsoft.github.io/copilot-camp/)
