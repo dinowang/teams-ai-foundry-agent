@@ -2,7 +2,16 @@
 
 This repository contains a proof of concept bot application that integrates with Microsoft Teams and utilizes Azure AI Foundry.
 
-[Deployment Instructions](./DEPLOYMENT.md)
+- [Prerequisites](./PREREQUISITE.md)
+- [Deployment Instructions](./DEPLOYMENT.md)
+
+## Links
+
+- [M365 Admin Portal](https://admin.microsoft.com)
+- [Entra ID Portal](https://entra.microsoft.com)
+- [Teams Admin Portal](https://admin.teams.microsoft.com)
+- [Teams Developer Portal](https://dev.teams.microsoft.com)
+- [Azure Portal](https://portal.azure.com)
 
 ## References
 
