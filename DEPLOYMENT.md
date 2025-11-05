@@ -11,12 +11,37 @@
 ## 前置需求
 
 - Tools
-  - Visual Studio Code
+  - Visual Studio Code  
+    - Windows
+      ```cmd
+      winget install --id Microsoft.VisualStudioCode
+      ```
+    - macOS
+      ```bash
+      brew install visual-studio-code --cask
+      ```
   - Visual Studio Code Extensions
     - Microsoft 365 Agents Toolkit 
+      ```bash
+      code --install-extension ms-azuretools.m365-agents-toolkit
+      ```
     - Azure Resource 
+      ```bash
+      code --install-extension ms-vscode.vscode-node-azure-pack
+      ```
     - Azure App Service
-  - Azure CLI
+      ```bash
+      code --install-extension ms-azuretools.vscode-azureappservice
+      ```
+  - Azure CLI  
+    - Windows
+      ```cmd
+      winget install --id Microsoft.AzureCLI
+      ```
+    - macOS
+      ```bash
+      brew install azure-cli
+      ```
   - Bicep CLI
     ```bash
     az bicep install
