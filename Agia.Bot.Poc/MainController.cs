@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.Teams.Api.Activities;
 using Microsoft.Teams.Apps;
 using Microsoft.Teams.Apps.Annotations;
@@ -85,7 +86,6 @@ public class MainController
             };
             var projectClient = new AIProjectClient(projectEndpointUri, credential);
 
-
             var agentClient = projectClient.GetPersistentAgentsClient();
             var agent = await agentClient.Administration.GetAgentAsync(_config.FOUNDRY_AGENT_ID);
 
@@ -103,42 +103,41 @@ public class MainController
                 _logger.LogInformation($"Continue with thread id: {threadId}");
             }
 
+
             var message = await agentClient.Messages.CreateMessageAsync(threadId, MessageRole.User, activity.Text, cancellationToken: context.CancellationToken);
-            var run = await agentClient.Runs.CreateRunAsync(threadId, agent.Value.Id, cancellationToken: context.CancellationToken);
+            var streamingUpdate = agentClient.Runs.CreateRunStreamingAsync(threadId, _config.FOUNDRY_AGENT_ID!, cancellationToken: context.CancellationToken);
 
-            while (run.Value.Status == RunStatus.Queued || run.Value.Status == RunStatus.InProgress)
+            var completeMessage = new StringBuilder();
+            var emitMessage = new StringBuilder();
+            var lastFlush = DateTime.UtcNow;
+
+            void EmitUpdate()
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(100));
-                run = await agentClient.Runs.GetRunAsync(threadId, run.Value.Id, cancellationToken: context.CancellationToken);
+                if (emitMessage.Length == 0)
+                    return;
+
+                var m = emitMessage.ToString();
+                emitMessage.Clear();
+                completeMessage.Append(m);
+                context.Stream.Emit(m);
             }
 
-            if (run.Value.Status != RunStatus.Completed)
+            await foreach (var update in streamingUpdate.WithCancellation(context.CancellationToken))
             {
-                _logger.LogWarning($"Run 未完成。狀態：{run.Value.Status}，錯誤：{run.Value.LastError?.Message}");
-                return;
-            }
-
-            await foreach (var m in agentClient.Messages.GetMessagesAsync(threadId, cancellationToken: context.CancellationToken))
-            {
-                if (m.Role == MessageRole.Agent && m.ContentItems != null)
+                if (update is MessageContentUpdate contentUpdate
+                    && !string.IsNullOrEmpty(contentUpdate.Text))
                 {
-                    foreach (var item in m.ContentItems.Take(1))
-                    {
-                        if (item is MessageTextContent mtc)
-                        {
-                            var msg = new MessageActivity()
-                            {
-                                Text = mtc.Text,
-                            };
-                            msg.AddAIGenerated();
-                            await client.Send(msg);
-                            break;
-                        }
-                    }
+                    emitMessage.Append(contentUpdate.Text);
 
-                    break;
+                    if ((DateTime.UtcNow - lastFlush).TotalMilliseconds > 500)
+                    {
+                        lastFlush = DateTime.UtcNow;
+                        EmitUpdate();
+                    }
                 }
             }
+
+            EmitUpdate();
         }
         catch (Exception ex)
         {
