@@ -1,13 +1,17 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.Teams.Api.Activities;
 using Microsoft.Teams.Apps;
 using Microsoft.Teams.Apps.Annotations;
 using Microsoft.Teams.Apps.Activities;
 using Microsoft.Teams.Cards;
+using Microsoft.Agents.AI;
 using Azure.AI.Projects;
 using Azure.AI.Agents.Persistent;
 using Azure.Core;
 using Azure.Identity;
+using Newtonsoft.Json;
+using Json.More;
 
 namespace Agia.Bot.Poc;
 
@@ -16,6 +20,8 @@ public class MainController
 {
     private readonly Config _config;
     private readonly ILogger _logger;
+
+    private readonly int _emitIntervalMs = 500;
 
     public MainController(
         Config config,
@@ -87,57 +93,9 @@ public class MainController
             var projectClient = new AIProjectClient(projectEndpointUri, credential);
 
             var agentClient = projectClient.GetPersistentAgentsClient();
-            var agent = await agentClient.Administration.GetAgentAsync(_config.FOUNDRY_AGENT_ID);
 
-            var threadId = string.Empty;
-            if (!context.Storage.Exists("foundry_thread_id"))
-            {
-                var thread = await agentClient.Threads.CreateThreadAsync();
-                threadId = thread.Value.Id;
-                _logger.LogInformation($"Create new thread id: {threadId}");
-                await context.Storage.SetAsync("foundry_thread_id", threadId);
-            }
-            else
-            {
-                threadId = await context.Storage.GetAsync<string>("foundry_thread_id");
-                _logger.LogInformation($"Continue with thread id: {threadId}");
-            }
-
-
-            var message = await agentClient.Messages.CreateMessageAsync(threadId, MessageRole.User, activity.Text, cancellationToken: context.CancellationToken);
-            var streamingUpdate = agentClient.Runs.CreateRunStreamingAsync(threadId, _config.FOUNDRY_AGENT_ID!, cancellationToken: context.CancellationToken);
-
-            var completeMessage = new StringBuilder();
-            var emitMessage = new StringBuilder();
-            var lastFlush = DateTime.UtcNow;
-
-            void EmitUpdate()
-            {
-                if (emitMessage.Length == 0)
-                    return;
-
-                var m = emitMessage.ToString();
-                emitMessage.Clear();
-                completeMessage.Append(m);
-                context.Stream.Emit(m);
-            }
-
-            await foreach (var update in streamingUpdate.WithCancellation(context.CancellationToken))
-            {
-                if (update is MessageContentUpdate contentUpdate
-                    && !string.IsNullOrEmpty(contentUpdate.Text))
-                {
-                    emitMessage.Append(contentUpdate.Text);
-
-                    if ((DateTime.UtcNow - lastFlush).TotalMilliseconds > 500)
-                    {
-                        lastFlush = DateTime.UtcNow;
-                        EmitUpdate();
-                    }
-                }
-            }
-
-            EmitUpdate();
+            // await AgentFrameworkAsync(context, activity, agentClient);
+            await AiFoundryDirectAsync(context, activity, agentClient);
         }
         catch (Exception ex)
         {
@@ -147,23 +105,129 @@ public class MainController
             {
                 Body = new List<CardElement>()
                 {
-                    new TextBlock("Error")
+                    new TextBlock(ex.Message)
                     {
                         Weight = TextWeight.Bolder,
                         Size = TextSize.Medium,
                         Color = TextColor.Attention,
                         Wrap = true,
                     },
-                    new TextBlock(ex.Message)
-                    {
-                        Wrap = true,
-                    },
                     new TextBlock(ex.StackTrace ?? string.Empty)
                     {
                         Wrap = true,
+                        Size = TextSize.Small,
+                        FontType = FontType.Monospace
                     }
                 }
             });
         }
+    }
+
+
+    private async Task<AgentThread> AgentFrameworkLoadOrCreateThreadAsync(IContext<MessageActivity> context, ChatClientAgent agent, string key)
+    {
+        if (context.Storage.Exists(key))
+        {
+            var savedJson = await context.Storage.GetAsync<string>(key);
+            var saved = savedJson.AsJsonElement();
+
+            return agent.DeserializeThread(saved, JsonSerializerOptions.Web); // resume
+        }
+
+        return agent.GetNewThread();
+    }
+
+
+    private async Task AgentFrameworkAsync(IContext<MessageActivity> context, MessageActivity activity, PersistentAgentsClient agentClient)
+    {
+        var orchestratorAgent = await agentClient.GetAIAgentAsync(_config.FOUNDRY_AGENT_ID!);
+
+        var saveKey = $"agent_thread_{activity.Conversation.Id}";
+        var agentThread = await AgentFrameworkLoadOrCreateThreadAsync(context, orchestratorAgent, saveKey);
+
+        var streamingUpdate = orchestratorAgent.RunStreamingAsync(activity.Text, agentThread, cancellationToken: context.CancellationToken);
+
+        var completeMessage = new StringBuilder();
+        var emitMessage = new StringBuilder();
+        var lastFlush = DateTime.UtcNow;
+
+        DateTime EmitUpdate()
+        {
+            if (emitMessage.Length > 0)
+            {
+                var m = emitMessage.ToString();
+                emitMessage.Clear();
+                completeMessage.Append(m);
+                context.Stream.Emit(m);
+            }
+            return DateTime.UtcNow;
+        }
+
+        await foreach (var update in streamingUpdate.WithCancellation(context.CancellationToken))
+        {
+            if (!string.IsNullOrEmpty(update.Text))
+            {
+                emitMessage.Append(update.Text);
+
+                if ((DateTime.UtcNow - lastFlush).TotalMilliseconds > _emitIntervalMs)
+                    lastFlush = EmitUpdate();
+            }
+        }
+        EmitUpdate();
+
+        await context.Storage.SetAsync(saveKey, agentThread.Serialize(JsonSerializerOptions.Web).GetRawText());
+    }
+
+    private async Task AiFoundryDirectAsync(IContext<MessageActivity> context, MessageActivity activity, PersistentAgentsClient agentClient)
+    {
+        var agent = await agentClient.Administration.GetAgentAsync(_config.FOUNDRY_AGENT_ID);
+
+        var threadId = string.Empty;
+        if (!context.Storage.Exists("foundry_thread_id"))
+        {
+            var thread = await agentClient.Threads.CreateThreadAsync();
+            threadId = thread.Value.Id;
+            _logger.LogInformation($"Create new thread id: {threadId}");
+            await context.Storage.SetAsync("foundry_thread_id", threadId);
+        }
+        else
+        {
+            threadId = await context.Storage.GetAsync<string>("foundry_thread_id");
+            _logger.LogInformation($"Continue with thread id: {threadId}");
+        }
+
+
+        var message = await agentClient.Messages.CreateMessageAsync(threadId, MessageRole.User, activity.Text, cancellationToken: context.CancellationToken);
+        var streamingUpdate = agentClient.Runs.CreateRunStreamingAsync(threadId, _config.FOUNDRY_AGENT_ID!, cancellationToken: context.CancellationToken);
+
+        var completeMessage = new StringBuilder();
+        var emitMessage = new StringBuilder();
+        var lastFlush = DateTime.UtcNow;
+
+        DateTime EmitUpdate()
+        {
+            if (emitMessage.Length > 0)
+            {
+                var m = emitMessage.ToString();
+                emitMessage.Clear();
+                completeMessage.Append(m);
+                context.Stream.Emit(m);
+            }
+            return DateTime.UtcNow;
+        }
+
+        await foreach (var update in streamingUpdate.WithCancellation(context.CancellationToken))
+        {
+            if (update is MessageContentUpdate contentUpdate
+                && !string.IsNullOrEmpty(contentUpdate.Text))
+            {
+                emitMessage.Append(contentUpdate.Text);
+
+                if ((DateTime.UtcNow - lastFlush).TotalMilliseconds > _emitIntervalMs)
+                    lastFlush = EmitUpdate();
+            }
+        }
+
+        EmitUpdate();
     }
 }
