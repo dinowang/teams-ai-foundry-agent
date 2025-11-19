@@ -45,8 +45,10 @@ public class MainController
                 return;
             }
 
+            var debugKey = $"{context.Activity.Conversation.Id}.debug_show_jwt";
+
             if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development"
-                && !context.Storage.Exists("debug_show_jwt"))
+                && !context.Storage.Exists(debugKey))
             {
                 await client.Send(new AdaptiveCard()
                 {
@@ -75,7 +77,7 @@ public class MainController
                     }
                 });
 
-                context.Storage.Set("debug_show_jwt", true);
+                context.Storage.Set(debugKey, true);
             }
 
             await client.Typing();
@@ -94,8 +96,8 @@ public class MainController
 
             var agentClient = projectClient.GetPersistentAgentsClient();
 
-            // await AgentFrameworkAsync(context, activity, agentClient);
-            await AiFoundryDirectAsync(context, activity, agentClient);
+            // await AgentFrameworkRespondAsync(context, activity, agentClient);
+            await AiFoundryDirectRespondAsync(context, activity, agentClient);
         }
         catch (Exception ex)
         {
@@ -138,7 +140,7 @@ public class MainController
     }
 
 
-    private async Task AgentFrameworkAsync(IContext<MessageActivity> context, MessageActivity activity, PersistentAgentsClient agentClient)
+    private async Task AgentFrameworkRespondAsync(IContext<MessageActivity> context, MessageActivity activity, PersistentAgentsClient agentClient)
     {
         var orchestratorAgent = await agentClient.GetAIAgentAsync(_config.FOUNDRY_AGENT_ID!);
 
@@ -178,21 +180,22 @@ public class MainController
         await context.Storage.SetAsync(saveKey, agentThread.Serialize(JsonSerializerOptions.Web).GetRawText());
     }
 
-    private async Task AiFoundryDirectAsync(IContext<MessageActivity> context, MessageActivity activity, PersistentAgentsClient agentClient)
+    private async Task AiFoundryDirectRespondAsync(IContext<MessageActivity> context, MessageActivity activity, PersistentAgentsClient agentClient)
     {
         var agent = await agentClient.Administration.GetAgentAsync(_config.FOUNDRY_AGENT_ID);
+        var key = $"{context.Activity.Conversation.Id}.{context.Activity.From.Id}.foundry_thread_id";
 
         var threadId = string.Empty;
-        if (!context.Storage.Exists("foundry_thread_id"))
+        if (!context.Storage.Exists(key))
         {
             var thread = await agentClient.Threads.CreateThreadAsync();
             threadId = thread.Value.Id;
             _logger.LogInformation($"Create new thread id: {threadId}");
-            await context.Storage.SetAsync("foundry_thread_id", threadId);
+            await context.Storage.SetAsync(key, threadId);
         }
         else
         {
-            threadId = await context.Storage.GetAsync<string>("foundry_thread_id");
+            threadId = await context.Storage.GetAsync<string>(key);
             _logger.LogInformation($"Continue with thread id: {threadId}");
         }
 
